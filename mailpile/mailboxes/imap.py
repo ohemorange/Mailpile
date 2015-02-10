@@ -3,7 +3,7 @@ try:
 except ImportError:
     import StringIO
 
-from imaplib import IMAP4, IMAP4_SSL
+from imap_sec import IMAP4, IMAP4_SSL
 from mailbox import Mailbox, Message
 
 import mailpile.mailboxes
