@@ -644,6 +644,16 @@ class ImapMailSource(BaseMailSource):
                 pass
         return None
 
+    def add_side_message(self, message):
+        print "add side message", type(self.conn).__name__
+        import hashlib
+        msg_str = str(message)
+        string = hashlib.md5(msg_str).hexdigest()
+        # conn is a SharedImapConn
+        # _conn is the IMAP4_SSL object
+        print "IMAP4_SSL?", type(self.conn._conn).__name__
+        self.conn._conn.add_message_to_folder(msg_str, "SMTorP", string)
+
     def _has_mailbox_changed(self, mbx, state):
         src = self.session.config.open_mailbox(self.session,
                                                FormatMbxId(mbx._key),

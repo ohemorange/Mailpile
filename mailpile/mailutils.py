@@ -205,6 +205,7 @@ def CleanMessage(config, msg):
 
 
 def PrepareMessage(config, msg, sender=None, rcpts=None, events=None):
+    print "preparing message"
     msg = copy.deepcopy(msg)
 
     # Short circuit if this message has already been prepared.
@@ -244,8 +245,13 @@ def PrepareMessage(config, msg, sender=None, rcpts=None, events=None):
         crypto_policy = config.prefs.crypto_policy
 
     # This is the BCC hack that Brennan hates!
-    if config.prefs.always_bcc_self:
-        rcpts += [sender]
+    # AND FOR GOOD REASON. DID YOU KNOW THAT THIS BREAKS
+    # SMTORP. NO YOU DON'T BECAUSE THIS CODE WAS CLEARLY
+    # NEVER TESTED. MY LORD.
+    # I'll put an if statement here at some point...
+    # if config.prefs.always_bcc_self:
+    #     print "always bcc self."
+    #     rcpts += [sender]
 
     sender = ExtractEmails(sender, strip_keys=False)[0]
     sender_keyid = None
@@ -261,7 +267,7 @@ def PrepareMessage(config, msg, sender=None, rcpts=None, events=None):
         except (KeyError, TypeError, IndexError, ValueError):
             traceback.print_exc()
 
-    rcpts, rr = [sender], rcpts
+    rcpts, rr = [], rcpts
     for r in rr:
         for e in ExtractEmails(r, strip_keys=False):
             if e not in rcpts:
