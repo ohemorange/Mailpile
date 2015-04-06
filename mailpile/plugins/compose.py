@@ -1011,7 +1011,7 @@ class EmptyOutbox(Sendit):
 
 _plugins.register_config_variables('prefs', {
     'empty_outbox_interval': [_('Delay between attempts to send mail'),
-                              int, 30]
+                              int, 10]
 })
 _plugins.register_slow_periodic_job('sendmail',
                                     'prefs.empty_outbox_interval',

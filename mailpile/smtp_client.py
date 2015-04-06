@@ -84,7 +84,8 @@ def _AddSocksHooks(cls, SSL=False):
 
             if SSL and ssl is not None:
                 new_socket = ssl.wrap_socket(new_socket,
-                                             self.keyfile, self.certfile)
+                                             self.keyfile, self.certfile,
+                                             ssl_version=PROTOCOL_TLSv1_2)
                 self.file = smtplib.SSLFakeFile(new_socket)
 
             return new_socket

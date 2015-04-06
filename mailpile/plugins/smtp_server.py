@@ -4,6 +4,7 @@ import random
 import smtpd
 import threading
 import traceback
+import sys
 
 import mailpile.config
 from mailpile.commands import Command
@@ -139,7 +140,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             smtpd.SMTPChannel.smtp_DATA(self, arg)
 
     def collect_incoming_data(self, data):
-        print "collect_incoming_data", data
+        print "collect_incoming_data"
         if (self.__line and
                 sum((len(l) for l in self.__line)) > self.MAX_MESSAGE_SIZE):
             self.push('552 Error: too much data')
@@ -162,7 +163,7 @@ class SMTPServer(smtpd.SMTPServer):
             channel = SMTPChannel(self.session, self, conn, addr)
 
     def process_message(self, peer, mailfrom, rcpttos, data):
-        print "process message", data
+        print "process message"
         # We can assume that the mailfrom and rcpttos have checked out
         # and this message is indeed intended for us. Spool it to disk
         # and add to the index!
@@ -187,6 +188,7 @@ class SMTPServer(smtpd.SMTPServer):
                            conversation=False)
             return None
         except:
+            print "Error:", sys.exc_info()[0]
             traceback.print_exc()
             return '400 Oops wtf'
 

@@ -253,7 +253,7 @@ class BaseConnectionBrokerProxy(TcpConnectionBroker):
     SUPPORTS = []
     WANTS = [Capability.OUTGOING_RAW]
     REJECTS = None
-    SSL_VERSION = ssl.PROTOCOL_TLSv1
+    SSL_VERSION = ssl.PROTOCOL_TLSv1_2
 
     def _proxy_address(self, address):
         return address
@@ -264,6 +264,7 @@ class BaseConnectionBrokerProxy(TcpConnectionBroker):
     def _wrap_ssl(self, conn):
         if self._debug is not None:
             self._debug('%s: Wrapping socket with SSL' % (self, ))
+        print "version???", self.SSL_VERSION, ssl.PROTOCOL_TLSv1_2, ssl.PROTOCOL_SSLv23
         return org_sslwrap(conn, None, None, ssl_version=self.SSL_VERSION)
 
     def _create_connection(self, context, address, *args, **kwargs):
@@ -295,7 +296,7 @@ class AutoHttpsConnBroker(BaseConnectionBrokerProxy):
         return address
 
     def _proxy(self, conn):
-        assert(self.SSL_VERSION == ssl.PROTOCOL_TLSv1)
+        assert(self.SSL_VERSION == ssl.PROTOCOL_TLSv1_2)
         return self._wrap_ssl(conn)
 
 

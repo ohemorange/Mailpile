@@ -205,11 +205,12 @@ def CleanMessage(config, msg):
 
 
 def PrepareMessage(config, msg, sender=None, rcpts=None, events=None):
-    print "preparing message"
+    print "mailutils: preparing message"
     msg = copy.deepcopy(msg)
 
     # Short circuit if this message has already been prepared.
     if 'x-mp-internal-sender' in msg and 'x-mp-internal-rcpts' in msg:
+        print "this message has already been prepared"
         return (sender or msg['x-mp-internal-sender'],
                 rcpts or [r.strip()
                           for r in msg['x-mp-internal-rcpts'].split(',')],
