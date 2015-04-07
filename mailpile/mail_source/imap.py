@@ -145,6 +145,7 @@ class SharedImapConn(threading.Thread):
 
         self._update_name()
         self.start()
+        print "initting sharedimapconn", self
 
     def _mk_proxy(self, method):
         def proxy_method(*args, **kwargs):
@@ -268,7 +269,7 @@ class SharedImapConn(threading.Thread):
             while self._conn:
                 # By default, all this does is send a NOOP every 120 seconds
                 # to keep the connection alive (or detect errors).
-                for t in range(0, 120):
+                for t in range(0, 60):#120):
                     time.sleep(1 if self._conn else 0)
                     if self._can_idle and self._idle_mailbox:
                         idle_counter += 1
@@ -283,6 +284,7 @@ class SharedImapConn(threading.Thread):
                 if self._conn:
                     with self as raw_conn:
                         raw_conn.noop()
+                        # raw_conn.timed_imap_exchange()
         except:
             if 'imap' in self.session.config.sys.debug:
                 self.session.ui.debug(traceback.format_exc())
@@ -508,6 +510,7 @@ class ImapMailSource(BaseMailSource):
             self.conn = None
 
     def open(self, conn_cls=None, throw=False):
+        print "opening an ImapMailSource", self
         conn = self.conn
         conn_id = self._conn_id()
         if conn:
@@ -651,6 +654,8 @@ class ImapMailSource(BaseMailSource):
         string = hashlib.md5(msg_str).hexdigest()
         # conn is a SharedImapConn
         # _conn is the IMAP4_SSL object
+        print "conn", self.conn
+        print "_conn", self.conn._conn
         self.conn._conn.add_message_to_folder(msg_str, "SMTorP", string)
 
     def _has_mailbox_changed(self, mbx, state):
