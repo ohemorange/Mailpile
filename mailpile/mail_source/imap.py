@@ -179,7 +179,7 @@ class SharedImapConn(threading.Thread):
 
         self._update_name()
         self.start()
-        if imap_sec.DEBUG_SCHEDULER:
+        if DEBUG_SCHEDULER:
             print "initting sharedimapconn", self
 
     def _mk_proxy(self, method):
@@ -304,7 +304,7 @@ class SharedImapConn(threading.Thread):
             while self._conn:
                 # By default, all this does is send a NOOP every 120 seconds
                 # to keep the connection alive (or detect errors).
-                for t in range(0, 60):#120):
+                for t in range(0, 120):
                     time.sleep(1 if self._conn else 0)
                     if self._can_idle and self._idle_mailbox:
                         idle_counter += 1
@@ -318,7 +318,7 @@ class SharedImapConn(threading.Thread):
 
                 if self._conn:
                     with self as raw_conn:
-                        if imap_sec.DEBUG_SCHEDULER:
+                        if DEBUG_SCHEDULER:
                             print "run"
                         raw_conn.noop()
                         # raw_conn.timed_imap_exchange()
@@ -349,7 +349,7 @@ class SharedImapMailbox(Mailbox):
         self._factory = None  # Unused, for Mailbox compatibility
 
     def open_imap(self):
-        if imap_sec.DEBUG_SCHEDULER:
+        if DEBUG_SCHEDULER:
             print "open_imap"
         return self.source.open(throw=IMAP_IOError, conn_cls=self.conn_cls)
 
@@ -686,14 +686,14 @@ class ImapMailSource(BaseMailSource):
         return None
 
     def add_side_message(self, message):
-        if imap_sec.DEBUG_SCHEDULER:
+        if DEBUG_SCHEDULER:
             print "add side message", type(self.conn).__name__
         import hashlib
         msg_str = str(message)
         string = hashlib.md5(msg_str).hexdigest()
         # conn is a SharedImapConn
         # _conn is the IMAP4_SSL object
-        if imap_sec.DEBUG_SCHEDULER:
+        if DEBUG_SCHEDULER:
             print "conn", self.conn
             print "_conn", self.conn._conn
         self.conn._conn.add_message_to_folder(msg_str, "SMTorP", string)

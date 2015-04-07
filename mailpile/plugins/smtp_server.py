@@ -20,6 +20,8 @@ from mailpile.util import *
 _plugins = PluginManager(builtin=__file__)
 
 
+DEBUG = False
+
 ##[ Configuration ]##########################################################
 
 _plugins.register_config_section(
@@ -30,7 +32,8 @@ _plugins.register_config_section(
 
 
 class SMTPChannel(smtpd.SMTPChannel):
-    print "we are at least trying to initialize a channel here"
+    if DEBUG:
+        print "we are at least trying to initialize a channel here"
     MAX_MESSAGE_SIZE = 1024 * 1024 * 50
     HASHCASH_WANT_BITS = 8  # Only 128-or-so expensive sha512_512k ops
     HASHCASH_URL = 'https://www.mailpile.is/hashcash/'
@@ -51,7 +54,8 @@ class SMTPChannel(smtpd.SMTPChannel):
         return False  # FIXME
 
     def push(self, msg):
-        print "push called", msg
+        if DEBUG:
+            print "push called", msg
         play_nice_with_threads()
         if msg.startswith('220'):
             # This is a hack, because these days it is no longer considered
@@ -101,7 +105,8 @@ class SMTPChannel(smtpd.SMTPChannel):
             return None
 
     def smtp_MAIL(self, arg):
-        print "smtp_MAIL", arg
+        if DEBUG:
+            print "smtp_MAIL", arg
         address = self.__getaddr('FROM:', arg) if arg else None
         if not address:
             self.push('501 Syntax: MAIL FROM:<address>')
@@ -114,7 +119,8 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.push('250 Ok')
 
     def smtp_RCPT(self, arg):
-        print "smtp_RCPT", arg
+        if DEBUG:
+            print "smtp_RCPT", arg
         if not self.__mailfrom:
             self.push('503 Error: need MAIL command')
             return
@@ -132,7 +138,8 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.push('250 Ok')
 
     def smtp_DATA(self, arg):
-        print "smtp_DATA", arg
+        if DEBUG:
+            print "smtp_DATA", arg
         if self.is_spam:
             self.push("450 I don't like spam!")
             self.close_when_done()
@@ -140,7 +147,8 @@ class SMTPChannel(smtpd.SMTPChannel):
             smtpd.SMTPChannel.smtp_DATA(self, arg)
 
     def collect_incoming_data(self, data):
-        print "collect_incoming_data"
+        if DEBUG:
+            print "collect_incoming_data"
         if (self.__line and
                 sum((len(l) for l in self.__line)) > self.MAX_MESSAGE_SIZE):
             self.push('552 Error: too much data')
@@ -151,19 +159,22 @@ class SMTPChannel(smtpd.SMTPChannel):
 
 class SMTPServer(smtpd.SMTPServer):
     def __init__(self, session, localaddr, **kwargs):
-        print "look who decided to start a server"
+        if DEBUG:
+            print "look who decided to start a server"
         self.session = session
         smtpd.SMTPServer.__init__(self, localaddr, None)
 
     def handle_accept(self):
-        print "oh look we're trying to accept stuff"
+        if DEBUG:
+            print "oh look we're trying to accept stuff"
         pair = self.accept()
         if pair is not None:
             conn, addr = pair
             channel = SMTPChannel(self.session, self, conn, addr)
 
     def process_message(self, peer, mailfrom, rcpttos, data):
-        print "process message"
+        if DEBUG:
+            print "process message"
         # We can assume that the mailfrom and rcpttos have checked out
         # and this message is indeed intended for us. Spool it to disk
         # and add to the index!
@@ -180,7 +191,8 @@ class SMTPServer(smtpd.SMTPServer):
             e.update_from_msg(session, message)
             import mailpile.mail_source
             for source in self.session.config.mail_sources.values():
-                print type(source).__name__
+                if DEBUG:
+                    print type(source).__name__
                 if type(source).__name__ == 'ImapMailSource':
                     source.add_side_message(message)
             
@@ -202,7 +214,6 @@ class SMTPWorker(threading.Thread):
     def run(self):
         cfg = self.session.config.sys.smtpd
         if cfg.host and cfg.port:
-            print "host, port", cfg.host, cfg.port
             server = SMTPServer(self.session, (cfg.host, cfg.port))
             while not self.quitting:
                 asyncore.poll(timeout=1.0)
