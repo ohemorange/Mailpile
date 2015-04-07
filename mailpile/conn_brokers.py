@@ -264,7 +264,6 @@ class BaseConnectionBrokerProxy(TcpConnectionBroker):
     def _wrap_ssl(self, conn):
         if self._debug is not None:
             self._debug('%s: Wrapping socket with SSL' % (self, ))
-        print "version???", self.SSL_VERSION, ssl.PROTOCOL_TLSv1_2, ssl.PROTOCOL_SSLv23
         return org_sslwrap(conn, None, None, ssl_version=self.SSL_VERSION)
 
     def _create_connection(self, context, address, *args, **kwargs):

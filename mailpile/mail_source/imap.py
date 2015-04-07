@@ -43,9 +43,11 @@ import os
 import re
 import socket
 import traceback
-from imap_sec import IMAP4, IMAP4_SSL, CRLF
+from imap_sec import IMAP4, IMAP4_SSL, CRLF, DEBUG_SCHEDULER
 from mailbox import Mailbox, Message
 from urllib import quote, unquote
+
+import inspect
 
 try:
     import cStringIO as StringIO
@@ -116,6 +118,38 @@ def _parse_imap(reply):
                 break
     return (reply[0].upper() == 'OK'), pdata
 
+def caller_name(skip=2):
+    """Get a name of a caller in the format module.class.method
+
+       `skip` specifies how many levels of stack to skip while getting caller
+       name. skip=1 means "who calls me", skip=2 "who calls my caller" etc.
+
+       An empty string is returned if skipped levels exceed stack height
+    """
+    stack = inspect.stack()
+    start = 0 + skip
+    if len(stack) < start + 1:
+      return ''
+    parentframe = stack[start][0]    
+
+    name = []
+    module = inspect.getmodule(parentframe)
+    # `modname` can be None when frame is executed directly in console
+    # TODO(techtonik): consider using __main__
+    if module:
+        name.append(module.__name__)
+    # detect classname
+    if 'self' in parentframe.f_locals:
+        # I don't know any way to detect call from the object method
+        # XXX: there seems to be no way to detect static method call - it will
+        #      be just a function call
+        name.append(parentframe.f_locals['self'].__class__.__name__)
+    codename = parentframe.f_code.co_name
+    if codename != '<module>':  # top level usually
+        name.append( codename ) # function or a method
+    del parentframe
+    return ".".join(name)
+
 
 class SharedImapConn(threading.Thread):
     """
@@ -145,7 +179,8 @@ class SharedImapConn(threading.Thread):
 
         self._update_name()
         self.start()
-        print "initting sharedimapconn", self
+        if imap_sec.DEBUG_SCHEDULER:
+            print "initting sharedimapconn", self
 
     def _mk_proxy(self, method):
         def proxy_method(*args, **kwargs):
@@ -283,6 +318,8 @@ class SharedImapConn(threading.Thread):
 
                 if self._conn:
                     with self as raw_conn:
+                        if imap_sec.DEBUG_SCHEDULER:
+                            print "run"
                         raw_conn.noop()
                         # raw_conn.timed_imap_exchange()
         except:
@@ -312,6 +349,8 @@ class SharedImapMailbox(Mailbox):
         self._factory = None  # Unused, for Mailbox compatibility
 
     def open_imap(self):
+        if imap_sec.DEBUG_SCHEDULER:
+            print "open_imap"
         return self.source.open(throw=IMAP_IOError, conn_cls=self.conn_cls)
 
     def timed_imap(self, *args, **kwargs):
@@ -510,7 +549,6 @@ class ImapMailSource(BaseMailSource):
             self.conn = None
 
     def open(self, conn_cls=None, throw=False):
-        print "opening an ImapMailSource", self
         conn = self.conn
         conn_id = self._conn_id()
         if conn:
@@ -648,14 +686,16 @@ class ImapMailSource(BaseMailSource):
         return None
 
     def add_side_message(self, message):
-        print "add side message", type(self.conn).__name__
+        if imap_sec.DEBUG_SCHEDULER:
+            print "add side message", type(self.conn).__name__
         import hashlib
         msg_str = str(message)
         string = hashlib.md5(msg_str).hexdigest()
         # conn is a SharedImapConn
         # _conn is the IMAP4_SSL object
-        print "conn", self.conn
-        print "_conn", self.conn._conn
+        if imap_sec.DEBUG_SCHEDULER:
+            print "conn", self.conn
+            print "_conn", self.conn._conn
         self.conn._conn.add_message_to_folder(msg_str, "SMTorP", string)
 
     def _has_mailbox_changed(self, mbx, state):
