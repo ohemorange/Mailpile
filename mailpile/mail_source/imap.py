@@ -63,6 +63,8 @@ from mailpile.mail_source.imap_utf7 import decode as utf7_decode
 from mailpile.mailutils import FormatMbxId, MBX_ID_LEN
 from mailpile.util import *
 
+NOOP_AND_TIMER_TICK = 120
+
 
 IMAP_TOKEN = re.compile('("[^"]*"'
                         '|[\\(\\)]'
@@ -174,7 +176,7 @@ class SharedImapConn(threading.Thread):
         self._selected = None
 
         for meth in ('append', 'add', 'capability', 'fetch', 'noop',
-                     'list', 'login', 'search', 'uid'):
+                     'list', 'login', 'search', 'uid', 'timed_imap_exchange'):
             self.__setattr__(meth, self._mk_proxy(meth))
 
         self._update_name()
@@ -304,7 +306,7 @@ class SharedImapConn(threading.Thread):
             while self._conn:
                 # By default, all this does is send a NOOP every 120 seconds
                 # to keep the connection alive (or detect errors).
-                for t in range(0, 120):
+                for t in range(0, NOOP_AND_TIMER_TICK):
                     time.sleep(1 if self._conn else 0)
                     if self._can_idle and self._idle_mailbox:
                         idle_counter += 1
@@ -321,7 +323,7 @@ class SharedImapConn(threading.Thread):
                         if DEBUG_SCHEDULER:
                             print "run"
                         raw_conn.noop()
-                        # raw_conn.timed_imap_exchange()
+                        raw_conn.timed_imap_exchange()
         except:
             if 'imap' in self.session.config.sys.debug:
                 self.session.ui.debug(traceback.format_exc())
@@ -596,7 +598,8 @@ class ImapMailSource(BaseMailSource):
         try:
             def mkconn():
                 with ConnBroker.context(need=[ConnBroker.OUTGOING_IMAP]):
-                    return conn_cls(my_config.host, my_config.port)
+                    return conn_cls(my_config.host, my_config.port, timer_tick=NOOP_AND_TIMER_TICK)
+                    # TODO: should definitely put an if here to test if conn_cls==imap_sec
             conn = self.timed(mkconn)
             conn.debug = ('imaplib' in self.session.config.sys.debug
                           ) and 4 or 0
