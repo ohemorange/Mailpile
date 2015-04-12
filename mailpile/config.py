@@ -1162,6 +1162,10 @@ class ConfigManager(ConfigDict):
         self.conf_key = os.path.join(self.workdir, 'mailpile.key')
         self.conf_pub = os.path.join(self.workdir, 'mailpile.rc')
 
+        self.imap_send_queue = os.path.join(self.workdir, 'mailpile.sq')
+        self.imap_delete_queue = os.path.join(self.workdir, 'mailpile.dq')
+        self.index_number = os.path.join(self.workdir, 'mailpile.in')
+
         # If the master key changes, we update the file on save, otherwise
         # the file is untouched. So we keep track of things here.
         self._master_key_ondisk = None

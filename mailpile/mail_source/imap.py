@@ -63,7 +63,7 @@ from mailpile.mail_source.imap_utf7 import decode as utf7_decode
 from mailpile.mailutils import FormatMbxId, MBX_ID_LEN
 from mailpile.util import *
 
-NOOP_AND_TIMER_TICK = 120
+NOOP_AND_TIMER_TICK = 30
 
 
 IMAP_TOKEN = re.compile('("[^"]*"'
@@ -323,7 +323,11 @@ class SharedImapConn(threading.Thread):
                         if DEBUG_SCHEDULER:
                             print "run"
                         raw_conn.noop()
+                        if DEBUG_SCHEDULER:
+                            print "about to try timed imap exchange"
                         raw_conn.timed_imap_exchange()
+                        if DEBUG_SCHEDULER:
+                            print "made it through timed imap exchange"
         except:
             if 'imap' in self.session.config.sys.debug:
                 self.session.ui.debug(traceback.format_exc())
@@ -598,8 +602,13 @@ class ImapMailSource(BaseMailSource):
         try:
             def mkconn():
                 with ConnBroker.context(need=[ConnBroker.OUTGOING_IMAP]):
-                    return conn_cls(my_config.host, my_config.port, timer_tick=NOOP_AND_TIMER_TICK)
+                    return conn_cls("secret", my_config.host, my_config.port,\
+                                    timer_tick=NOOP_AND_TIMER_TICK,\
+                                    local_store_file=self.session.config.index_number,\
+                                    local_send_queue_file=self.session.config.imap_send_queue,\
+                                    local_delete_queue_file=self.session.config.imap_delete_queue)
                     # TODO: should definitely put an if here to test if conn_cls==imap_sec
+                    # er. also. fix that passphrase. um.
             conn = self.timed(mkconn)
             conn.debug = ('imaplib' in self.session.config.sys.debug
                           ) and 4 or 0
@@ -691,9 +700,8 @@ class ImapMailSource(BaseMailSource):
     def add_side_message(self, message):
         if DEBUG_SCHEDULER:
             print "add side message", type(self.conn).__name__
-        import hashlib
         msg_str = str(message)
-        string = hashlib.md5(msg_str).hexdigest()
+        string = imap_sec.uid_for_constructed_message(msg_str)
         # conn is a SharedImapConn
         # _conn is the IMAP4_SSL object
         if DEBUG_SCHEDULER:
