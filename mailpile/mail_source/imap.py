@@ -63,7 +63,7 @@ from mailpile.mail_source.imap_utf7 import decode as utf7_decode
 from mailpile.mailutils import FormatMbxId, MBX_ID_LEN
 from mailpile.util import *
 
-NOOP_AND_TIMER_TICK = 30
+NOOP_AND_TIMER_TICK = 120
 
 
 IMAP_TOKEN = re.compile('("[^"]*"'

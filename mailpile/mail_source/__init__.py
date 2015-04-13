@@ -145,7 +145,6 @@ class BaseMailSource(threading.Thread):
         return mailboxes
 
     def sync_mail(self):
-        return True
         """Iterates through all the mailboxes and scans if necessary."""
         config = self.session.config
         self._last_rescan_count = rescanned = errors = 0
@@ -710,6 +709,7 @@ class BaseMailSource(threading.Thread):
         _original_session = self.session
 
         def sleeptime():
+            return 30
             return self.my_config.interval
             # print "_last_rescan_completed:", self._last_rescan_completed
             # print "_last_rescan_failed:", self._last_rescan_failed
