@@ -214,6 +214,7 @@ class SharedImapConn(threading.Thread):
         return proxy_method
 
     def close(self):
+        print "other close"
         assert(self._lock.locked())
         self._selected = None
         if '(closed)' not in self.name:
@@ -296,6 +297,7 @@ class SharedImapConn(threading.Thread):
             raise self._conn.abort('socket error: %s' % val)
 
     def quit(self):
+        print "third quit"
         self._conn = None
         self._update_name()
 
@@ -329,9 +331,11 @@ class SharedImapConn(threading.Thread):
                         if DEBUG_SCHEDULER:
                             print "made it through timed imap exchange"
         except:
+            print "hella exceptskis bro", traceback.format_exc()
             if 'imap' in self.session.config.sys.debug:
                 self.session.ui.debug(traceback.format_exc())
         finally:
+            print "last quit?"
             self.quit()
 
 
@@ -546,6 +550,7 @@ class ImapMailSource(BaseMailSource):
                                   ('host', 'port', 'password', 'username')]))
 
     def close(self):
+        print "close", caller_name()
         if self.conn:
             self.event.data['connection'] = {
                 'live': False,
@@ -572,6 +577,7 @@ class ImapMailSource(BaseMailSource):
             with self._lock:
                 if self.conn == conn:
                     self.conn = None
+            print "quit"
             conn.quit()
 
         # This facilitates testing, event should already exist in real life.
@@ -675,6 +681,7 @@ class ImapMailSource(BaseMailSource):
             if conn:
                 # Close the socket directly, in the hopes this will boot
                 # any timed-out operations out of a hung state.
+                print "close directly"
                 conn.socket().shutdown(socket.SHUT_RDWR)
                 conn.file.close()
         except (AttributeError, IOError, socket.error):
@@ -780,6 +787,7 @@ class ImapMailSource(BaseMailSource):
             return mboxes[:self.MAX_MAILBOXES]
 
     def quit(self, *args, **kwargs):
+        print "other quit"
         if self.conn:
             self.conn.quit()
         return BaseMailSource.quit(self, *args, **kwargs)

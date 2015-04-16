@@ -131,7 +131,7 @@ CONFIG_RULES = {
         'password':        (_('Password'), str, ''),
         'host':            (_('Host'), str, ''),
         'port':            (_('Port'), int, 993),
-        'keepalive':       (_('Keep server connections alive'), bool, False),
+        'keepalive':       (_('Keep server connections alive'), bool, True),
         'discovery':       (_('Mailbox discovery policy'), False, {
             'paths':       (_('Paths to watch for new mailboxes'), str, []),
             'policy':      (_('Default mailbox policy'),

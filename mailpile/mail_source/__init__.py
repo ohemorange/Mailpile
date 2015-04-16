@@ -578,7 +578,9 @@ class BaseMailSource(threading.Thread):
                 progress['copying_src_id'] = key
                 try:
                     data = src.get_bytes(key)
-                except KeyError:
+                except:# KeyError:
+                    print "here"
+                    print sys.exc_info()
                     progress['key_errors'] = key_errors
                     key_errors.append(key)
                     # Ignore, in case this is a problem with just this
@@ -750,9 +752,11 @@ class BaseMailSource(threading.Thread):
                 if self.alive and time.time() >= next_save_time:
                     self._save_state()
                     if not self.my_config.keepalive:
+                        print "don't keep alive"
                         self.close()
                 elif (self._last_rescan_completed and
                         not self.my_config.keepalive):
+                    print "don't keep alive and completed"
                     self.close()
             except:
                 self.event.data['traceback'] = traceback.format_exc()
@@ -767,6 +771,7 @@ class BaseMailSource(threading.Thread):
                         pass
                 self.session = _original_session
             self._update_unknown_state()
+        print "all done"
         self.close()
         self._log_status(_('Shut down'))
         self._save_state()
