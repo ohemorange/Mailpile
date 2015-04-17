@@ -43,7 +43,8 @@ import os
 import re
 import socket
 import traceback
-from imap_sec import IMAP4, IMAP4_SSL, CRLF, DEBUG_SCHEDULER, uid_for_constructed_message
+from imap_sec import IMAP4, IMAP4_SSL, CRLF, \
+    DEBUG_SCHEDULER, uid_for_constructed_message, SMTorP
 from mailbox import Mailbox, Message
 from urllib import quote, unquote
 
@@ -708,13 +709,13 @@ class ImapMailSource(BaseMailSource):
         if DEBUG_SCHEDULER:
             print "add side message", type(self.conn).__name__
         msg_str = str(message)
-        string = uid_for_constructed_message(msg_str)
+        string = uid_for_constructed_message(msg_str, SMTorP)
         # conn is a SharedImapConn
         # _conn is the IMAP4_SSL object
         if DEBUG_SCHEDULER:
             print "conn", self.conn
             print "_conn", self.conn._conn
-        self.conn._conn.add_message_to_folder(msg_str, "SMTorP", string)
+        self.conn._conn.add_message_to_folder(msg_str, SMTorP, string)
 
     def _has_mailbox_changed(self, mbx, state):
         src = self.session.config.open_mailbox(self.session,

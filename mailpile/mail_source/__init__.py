@@ -711,15 +711,15 @@ class BaseMailSource(threading.Thread):
         _original_session = self.session
 
         def sleeptime():
-            return self.my_config.interval
-            # print "_last_rescan_completed:", self._last_rescan_completed
-            # print "_last_rescan_failed:", self._last_rescan_failed
-            # if self._last_rescan_completed or self._last_rescan_failed:
-            #     print "sleeptime:", self.my_config.interval
-            #     return self.my_config.interval
-            # else:
-            #     print "sleeptime set to 1"
-            #     return 1
+            # return self.my_config.interval
+            print "_last_rescan_completed:", self._last_rescan_completed
+            print "_last_rescan_failed:", self._last_rescan_failed
+            if self._last_rescan_completed or self._last_rescan_failed:
+                print "sleeptime:", self.my_config.interval
+                return self.my_config.interval
+            else:
+                print "sleeptime set to 1"
+                return 1
 
         self._loop_count = 0
         while self._loop_count == 0 or self._sleep(self._jitter(sleeptime())):
