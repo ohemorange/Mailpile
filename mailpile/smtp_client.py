@@ -260,6 +260,8 @@ def SendMail(session, msg_mid, from_to_msg_ev_tuples,
             server = (smtp_ssl and SMTP_SSL or SMTP
                       )(local_hostname='mailpile.local', timeout=25)
 
+            print server
+
             def sm_startup():
                 if 'sendmail' in session.config.sys.debug:
                     server.set_debuglevel(1)

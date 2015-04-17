@@ -43,7 +43,7 @@ import os
 import re
 import socket
 import traceback
-from imap_sec import IMAP4, IMAP4_SSL, CRLF, DEBUG_SCHEDULER
+from imap_sec import IMAP4, IMAP4_SSL, CRLF, DEBUG_SCHEDULER, uid_for_constructed_message
 from mailbox import Mailbox, Message
 from urllib import quote, unquote
 
@@ -708,7 +708,7 @@ class ImapMailSource(BaseMailSource):
         if DEBUG_SCHEDULER:
             print "add side message", type(self.conn).__name__
         msg_str = str(message)
-        string = imap_sec.uid_for_constructed_message(msg_str)
+        string = uid_for_constructed_message(msg_str)
         # conn is a SharedImapConn
         # _conn is the IMAP4_SSL object
         if DEBUG_SCHEDULER:
